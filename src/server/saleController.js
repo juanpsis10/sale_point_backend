@@ -153,7 +153,21 @@ router.post("/registrar-venta", async (req, res) => {
         total,
         date, // Agregar la fecha y hora de la venta
       } = req.body;
+      // Crear un objeto de fecha a partir de la cadena recibida
+      const fechaHora = new Date(date);
 
+      // Obtener las partes de la fecha y hora
+      const year = fechaHora.getFullYear();
+      const month = (fechaHora.getMonth() + 1).toString().padStart(2, "0"); // El mes es 0-indexado, por lo que necesitas sumar 1
+      const day = fechaHora.getDate().toString().padStart(2, "0");
+      const hours = fechaHora.getHours().toString().padStart(2, "0");
+      const minutes = fechaHora.getMinutes().toString().padStart(2, "0");
+      const seconds = fechaHora.getSeconds().toString().padStart(2, "0");
+
+      // Formatear la fecha y hora en el formato deseado (YYYY-MM-DD HH:MM:SS)
+      const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+      console.log("fecha formateada en la api: " + formattedDate);
       // Insertar la venta en la base de datos
       await db("sale").insert({
         client_id,
@@ -163,9 +177,8 @@ router.post("/registrar-venta", async (req, res) => {
         document_number,
         cantidad_producto,
         total,
-        date, // Agregar la fecha y hora de la venta
+        date: formattedDate, // Agregar la fecha y hora de la venta
       });
-
       // Actualizar el stock del producto en la sucursal
       await db("product_branch")
         .where({ product_id, branch_id })
