@@ -38,7 +38,7 @@ router.get("/ventas-del-dia", async (req, res) => {
     console.error("Error al obtener las ventas del día:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -74,7 +74,7 @@ router.get("/total-ventas", async (req, res) => {
     console.error("Error al obtener el total de ventas:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -95,7 +95,7 @@ router.get("/primercliente", async (req, res) => {
       error: "Error interno del servidor al obtener el primer cliente.",
     });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -136,7 +136,7 @@ router.post("/registrar-venta", async (req, res) => {
       .status(500)
       .json({ error: "Error interno del servidor al registrar la venta" });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -164,7 +164,7 @@ router.get("/last-document-number", async (req, res) => {
     console.error("Error al obtener el último número de documento:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 

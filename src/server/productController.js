@@ -23,7 +23,7 @@ router.post("/addproduct", async (req, res) => {
     console.error("Error al agregar producto:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -48,7 +48,7 @@ router.get("/allproducts", async (req, res) => {
     console.error("Error al obtener productos:", error);
     res.status(500).json({ error: "Error al obtener productos." });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -70,7 +70,7 @@ router.put("/:id", async (req, res) => {
     console.error("Error al actualizar el producto:", error);
     res.status(500).json({ message: "Error al actualizar el producto" });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -101,7 +101,7 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
       message: "Error al actualizar los datos de la sucursal del producto",
     });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -122,7 +122,7 @@ router.put("/:productId/branch/:branchId/disable", async (req, res) => {
       .status(500)
       .json({ error: "Error al desactivar producto en la sucursal" });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -141,7 +141,7 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
     console.error("Error al activar producto en la sucursal:", error);
     res.status(500).json({ error: "Error al activar producto en la sucursal" });
   } finally {
-    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
