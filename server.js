@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const knex = require("knex");
 const dbConfig = require("./knexfile");
-
+const MAX_RETRIES = 3; // Número máximo de intentos
 const branchController = require("./src/server/branchController");
 const userController = require("./src/server/userController");
 const clientController = require("./src/server/clientController");
@@ -36,35 +36,57 @@ app.use("/report", reportController);
 
 // Rutas de ejemplo para consultar la tabla 'users'
 app.get("/user", async (req, res) => {
-  try {
-    const user = await db.select().from("users");
-    res.json(user);
-  } catch (error) {
-    console.error("Error al obtener usuarios:", error);
-    res.status(500).json({ error: "Error al obtener usuarios." });
-  } finally {
-    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      const users = await db.select().from("users");
+      res.json(users);
+      return; // Salir del bucle y devolver la respuesta exitosa
+    } catch (error) {
+      console.error(
+        `Error al obtener usuarios (Intento ${retries + 1}/${MAX_RETRIES}):`,
+        error
+      );
+      retries++;
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    }
   }
+
+  // Si se alcanza el número máximo de intentos sin éxito
+  console.error("Se excedió el número máximo de intentos sin éxito");
+  res.status(500).json({ error: "Error interno del servidor" });
 });
 
-// Ruta para validar usuario y contraseña
 app.post("/validate-user", async (req, res) => {
   const { username, password } = req.body;
-  try {
-    const user = await db("users").where({ username, password }).first();
-    if (user) {
-      res
-        .status(200)
-        .json({ username: user.username, role: user.role, id: user.id }); // Incluir el nombre de usuario y el rol en la respuesta
-    } else {
-      res.status(401).json({ error: "Credenciales incorrectas" });
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      const user = await db("users").where({ username, password }).first();
+      if (user) {
+        res
+          .status(200)
+          .json({ username: user.username, role: user.role, id: user.id }); // Incluir el nombre de usuario y el rol en la respuesta
+        return; // Salir del bucle y devolver la respuesta exitosa
+      } else {
+        res.status(401).json({ error: "Credenciales incorrectas" });
+        return; // Salir del bucle y devolver la respuesta de error de autenticación
+      }
+    } catch (error) {
+      console.error(
+        `Error al validar usuario (Intento ${retries + 1}/${MAX_RETRIES}):`,
+        error
+      );
+      retries++;
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
     }
-  } catch (error) {
-    console.error("Error al validar usuario:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  } finally {
-    db.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
+
+  // Si se alcanza el número máximo de intentos sin éxito
+  console.error("Se excedió el número máximo de intentos sin éxito");
+  res.status(500).json({ error: "Error interno del servidor" });
 });
 
 // Iniciar el servidor en un puerto específico
