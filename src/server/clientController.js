@@ -18,6 +18,8 @@ router.post("/addclient", async (req, res) => {
   } catch (error) {
     console.error("Error al agregar cliente:", error);
     res.status(500).json({ error: "Error interno del servidor" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -28,6 +30,8 @@ router.get("/allclients", async (req, res) => {
   } catch (error) {
     console.error("Error al obtener clientes:", error);
     res.status(500).json({ error: "Error al obtener clientes." });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -46,6 +50,8 @@ router.put("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error al actualizar cliente:", error);
     res.status(500).json({ error: "Error al actualizar cliente" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 

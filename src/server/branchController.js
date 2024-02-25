@@ -19,6 +19,8 @@ router.post("/addbranch", async (req, res) => {
   } catch (error) {
     console.error("Error al agregar la sucursal:", error);
     res.status(500).json({ error: "Error interno del servidor" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -29,6 +31,8 @@ router.get("/allbranches", async (req, res) => {
   } catch (error) {
     console.error("Error al obtener las sucursales:", error);
     res.status(500).json({ error: "Error al obtener las sucursales." });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -43,6 +47,8 @@ router.put("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error al actualizar la sucursal:", error);
     res.status(500).json({ error: "Error al actualizar la sucursal" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -55,6 +61,8 @@ router.put("/:id/disable", async (req, res) => {
   } catch (error) {
     console.error("Error al desactivar el branch:", error);
     res.status(500).json({ error: "Error al desactivar el branch" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -67,6 +75,8 @@ router.put("/:id/activate", async (req, res) => {
   } catch (error) {
     console.error("Error al activar la sucursal:", error);
     res.status(500).json({ error: "Error al activar la sucursal" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 

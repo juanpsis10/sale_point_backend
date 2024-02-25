@@ -1,10 +1,10 @@
 const knex = require("knex")({
   client: "mysql",
   connection: {
-    host: "bvtpgx1a6ykkoaypyews-mysql.services.clever-cloud.com",
-    user: "ujz6060i9a4igue9",
-    password: "I3KPG9ceEv4frfeVlPAD",
-    database: "bvtpgx1a6ykkoaypyews",
+    host: "b0ez1scklldr188uqggz-mysql.services.clever-cloud.com",
+    user: "uxkta8xcrz31jle3",
+    password: "BDQ0BpReOFv1rqSZNMmF",
+    database: "b0ez1scklldr188uqggz",
   },
 });
 

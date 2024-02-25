@@ -18,16 +18,20 @@ router.post("/adduser", async (req, res) => {
   } catch (error) {
     console.error("Error al agregar usuario:", error);
     res.status(500).json({ error: "Error interno del servidor" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
 router.get("/allusers", async (req, res) => {
   try {
-    const users = await db.select().from("users");
+    const users = await db.select().from("users"); // Utilizamos la instancia de Knex para realizar la consulta
     res.json(users);
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
     res.status(500).json({ error: "Error al obtener usuarios." });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -46,6 +50,8 @@ router.put("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
     res.status(500).json({ error: "Error al actualizar usuario" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -58,6 +64,8 @@ router.put("/:id/activate", async (req, res) => {
   } catch (error) {
     console.error("Error al activar usuario:", error);
     res.status(500).json({ error: "Error al activar usuario" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
@@ -70,6 +78,8 @@ router.put("/:id/disable", async (req, res) => {
   } catch (error) {
     console.error("Error al desactivar usuario:", error);
     res.status(500).json({ error: "Error al desactivar usuario" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 

@@ -42,6 +42,8 @@ router.get("/ventas-del-dia", async (req, res) => {
   } catch (error) {
     console.error("Error al obtener las ventas del día:", error);
     res.status(500).json({ error: "Error interno del servidor" });
+  } finally {
+    knex.destroy(); // Aquí se cierra la conexión de Knex después de que se completa la consulta
   }
 });
 
