@@ -5,6 +5,35 @@ const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
 const db = knex(dbConfig.development);
 
+router.delete("/eliminar_venta/:ventaId", async (req, res) => {
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      const { ventaId } = req.params; // Obtener el ID de la venta de los parámetros de la URL
+
+      // Realizar la eliminación de la venta en la base de datos
+      await db("sale").where("id", ventaId).del();
+
+      res.status(200).json({ message: "Venta eliminada exitosamente" });
+      return; // Salir del bucle y devolver la respuesta exitosa
+    } catch (error) {
+      console.error(
+        `Error al eliminar la venta (Intento ${retries + 1}/${MAX_RETRIES}):`,
+        error
+      );
+      retries++;
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    }
+  }
+
+  // Si se alcanza el número máximo de intentos sin éxito
+  console.error("Se excedió el número máximo de intentos sin éxito");
+  res
+    .status(500)
+    .json({ error: "Error interno del servidor al eliminar la venta" });
+});
+
 router.get("/ventas-del-dia", async (req, res) => {
   const { fecha } = req.query;
   const [year, month, day] = fecha.split("-");
