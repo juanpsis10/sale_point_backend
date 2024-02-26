@@ -5,15 +5,15 @@ const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
 const db = knex(dbConfig.development);
 
-router.delete("/eliminar_venta/:ventaId", async (req, res) => {
+router.delete("/eliminar_venta/:numeroDocumento", async (req, res) => {
   let retries = 0;
 
   while (retries < MAX_RETRIES) {
     try {
-      const { ventaId } = req.params; // Obtener el ID de la venta de los parámetros de la URL
+      const { numeroDocumento } = req.params;
 
-      // Realizar la eliminación de la venta en la base de datos
-      await db("sale").where("id", ventaId).del();
+      // Realizar la eliminación de la venta basada en el número de documento
+      await db("sale").where({ document_number: numeroDocumento }).del();
 
       res.status(200).json({ message: "Venta eliminada exitosamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -29,9 +29,7 @@ router.delete("/eliminar_venta/:ventaId", async (req, res) => {
 
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
-  res
-    .status(500)
-    .json({ error: "Error interno del servidor al eliminar la venta" });
+  res.status(500).json({ error: "Error interno del servidor" });
 });
 
 router.get("/ventas-del-dia", async (req, res) => {
