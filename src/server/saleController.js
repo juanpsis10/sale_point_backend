@@ -36,7 +36,7 @@ router.get("/ventas-del-dia", async (req, res) => {
         .join("client as c", "sale.client_id", "=", "c.id")
         .where("date", "LIKE", `${formattedFecha}%`)
         .groupBy("sale.document_number")
-        .orderBy("sale.document_number", "asc"); // Filtrar por la fecha del día especificado
+        .orderBy("sale.document_number", "desc"); // Filtrar por la fecha del día especificado
 
       // Enviar los resultados como respuesta al cliente
       res.json(result);

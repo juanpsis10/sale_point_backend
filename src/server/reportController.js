@@ -35,7 +35,7 @@ router.get("/ventas-del-dia", async (req, res) => {
         .join("client as c", "sale.client_id", "=", "c.id")
         .where("date", "LIKE", `${fechasinformato}%`)
         .groupBy("sale.document_number")
-        .orderBy("sale.document_number", "asc");
+        .orderBy("sale.document_number", "desc");
 
       await db.destroy(); // Cerrar la conexión después de obtener las ventas del día
 
