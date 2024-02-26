@@ -27,13 +27,15 @@ router.get("/ventas-del-dia", async (req, res) => {
           "c.name AS cliente",
           "sale.document_number AS numero_documento",
           db.raw("MIN(sale.date) AS primer_fecha"),
-          db.raw("SUM(sale.total) AS total_venta")
+          db.raw("SUM(sale.total) AS total_venta"),
+          "sale.payment_method" // Agregar la columna payment_method
         )
         .from("sale")
         .join("users as u", "sale.user_id", "=", "u.id")
         .join("client as c", "sale.client_id", "=", "c.id")
         .where("date", "LIKE", `${fechasinformato}%`)
-        .groupBy("sale.document_number");
+        .groupBy("sale.document_number")
+        .orderBy("sale.document_number", "asc");
 
       await db.destroy(); // Cerrar la conexión después de obtener las ventas del día
 

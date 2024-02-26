@@ -28,12 +28,15 @@ router.get("/ventas-del-dia", async (req, res) => {
           "c.name AS cliente",
           "sale.document_number AS numero_documento",
           db.raw("MIN(sale.date) AS primer_fecha"),
-          db.raw("SUM(sale.total) AS total_venta")
+          db.raw("SUM(sale.total) AS total_venta"),
+          "sale.payment_method" // Agregar la columna payment_method
         )
         .from("sale")
         .join("users as u", "sale.user_id", "=", "u.id")
         .join("client as c", "sale.client_id", "=", "c.id")
-        .where("date", "LIKE", `${formattedFecha}%`); // Filtrar por la fecha del día especificado
+        .where("date", "LIKE", `${formattedFecha}%`)
+        .groupBy("sale.document_number")
+        .orderBy("sale.document_number", "asc"); // Filtrar por la fecha del día especificado
 
       // Enviar los resultados como respuesta al cliente
       res.json(result);
@@ -152,6 +155,7 @@ router.post("/registrar-venta", async (req, res) => {
         cantidad_producto,
         total,
         date, // Agregar la fecha y hora de la venta
+        payment_method, // Agregar el método de pago
       } = req.body;
       // Crear un objeto de fecha a partir de la cadena recibida
       const fechaHora = new Date(date);
@@ -178,6 +182,7 @@ router.post("/registrar-venta", async (req, res) => {
         cantidad_producto,
         total,
         date: formattedDate, // Agregar la fecha y hora de la venta
+        payment_method, // Agregar el método de pago
       });
       // Actualizar el stock del producto en la sucursal
       await db("product_branch")
