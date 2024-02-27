@@ -35,6 +35,13 @@ router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
         return res.status(404).json({ message: "Venta no encontrada" });
       }
 
+      console.log("Datos de la venta individual:", ventaIndividual);
+      // Imprimir los datos de cada producto en la consola
+      ventaIndividual.forEach((producto) => {
+        console.log("Nombre del producto:", producto.product_name);
+        console.log("Cantidad:", producto.quantity);
+      });
+
       // Enviar los detalles de la venta individual como respuesta
       res.status(200).json(ventaIndividual);
 
