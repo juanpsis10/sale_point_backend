@@ -5,6 +5,57 @@ const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
 const db = knex(dbConfig.development);
 
+router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
+  const { numero_documento } = req.params;
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
+
+      // Consulta SQL para obtener los detalles de la venta individual
+      const ventaIndividual = await db.raw(`
+        SELECT 
+            sale.document_number,
+            product.name AS product_name,
+            product_branch.price AS unit_price,
+            sale.cantidad_producto AS quantity
+        FROM 
+            sale
+        JOIN 
+            product ON sale.product_id = product.id
+        JOIN 
+            product_branch ON sale.product_id = product_branch.product_id
+        WHERE 
+            sale.document_number = '${numero_documento}';
+      `);
+
+      // Verificar si se encontraron resultados
+      if (ventaIndividual.length === 0) {
+        return res.status(404).json({ message: "Venta no encontrada" });
+      }
+
+      // Enviar los detalles de la venta individual como respuesta
+      res.status(200).json(ventaIndividual);
+
+      return; // Salir del bucle y devolver la respuesta exitosa
+    } catch (error) {
+      console.error(
+        `Error al obtener los detalles de la venta individual (Intento ${
+          retries + 1
+        }/${MAX_RETRIES}):`,
+        error
+      );
+      retries++;
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    }
+  }
+
+  // Si se alcanza el número máximo de intentos sin éxito
+  console.error("Se excedió el número máximo de intentos sin éxito");
+  res.status(500).json({ message: "Error interno del servidor" });
+});
+
 router.get("/ventas-del-dia", async (req, res) => {
   let retries = 0;
 
