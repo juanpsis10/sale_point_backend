@@ -89,6 +89,39 @@ app.post("/validate-user", async (req, res) => {
   res.status(500).json({ error: "Error interno del servidor" });
 });
 
+// Endpoint para mantener activa la sesión del usuario
+app.get("/keep-alive", async (req, res) => {
+  console.log("Token escuchando en el backend.");
+
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      // Realizar la consulta SQL para obtener el nombre del cliente con ID 1
+      const client = await db("client").select("name").where("id", 1).first();
+
+      console.log("Token escuchando en la base de datos.");
+
+      // Enviar el nombre del cliente como respuesta
+      res.status(200).json({ clientName: client.name });
+      return; // Salir del bucle y devolver la respuesta exitosa
+    } catch (error) {
+      console.error(
+        `Error al obtener el nombre del cliente (Intento ${
+          retries + 1
+        }/${MAX_RETRIES}):`,
+        error
+      );
+      retries++;
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    }
+  }
+
+  // Si se alcanza el número máximo de intentos sin éxito
+  console.error("Se excedió el número máximo de intentos sin éxito");
+  res.status(500).json({ error: "Error interno del servidor" });
+});
+
 // Iniciar el servidor en un puerto específico
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
