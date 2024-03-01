@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const knex = require("knex");
 const dbConfig = require("./knexfile");
+const cron = require("node-cron"); // Importa la biblioteca de tareas programadas
 const MAX_RETRIES = 3; // Número máximo de intentos
 const branchController = require("./src/server/branchController");
 const userController = require("./src/server/userController");
@@ -121,6 +122,34 @@ app.get("/keep-alive", async (req, res) => {
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error interno del servidor" });
 });
+
+const keepSessionAlive = async () => {
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      const client = await db("client").select("name").where("id", 1).first();
+      console.log("Token escuchando en la base de datos.");
+      // Enviar el nombre del cliente como respuesta
+      res.status(200).json({ clientName: client.name });
+      return; // Salir del bucle y devolver la respuesta exitosa
+    } catch (error) {
+      console.error(
+        `Error al obtener el nombre del cliente (Intento ${
+          retries + 1
+        }/${MAX_RETRIES}):`,
+        error
+      );
+      retries++;
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+  }
+
+  console.error("Se excedió el número máximo de intentos sin éxito");
+};
+
+// Programa la tarea para mantener activa la sesión del usuario cada 5 minutos
+cron.schedule("*/5 * * * *", keepSessionAlive);
 
 // Iniciar el servidor en un puerto específico
 const port = process.env.PORT || 3000;
