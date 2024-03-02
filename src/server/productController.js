@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const { db } = require("../../server"); // Importa la instancia de conexión db desde server.js
+const knex = require("knex");
+const dbConfig = require("../../knexfile");
+const db = knex(dbConfig.development);
 
 router.post("/addproduct", async (req, res) => {
   const { name, description, code, branchId, price } = req.body;
@@ -30,6 +32,9 @@ router.post("/addproduct", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -67,6 +72,15 @@ router.get("/allproducts", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      try {
+        // Cerrar la conexión a la base de datos
+        await db.destroy();
+        console.log("Conexión cerrada correctamente");
+      } catch (error) {
+        console.error("Error al cerrar la conexión:", error);
+      }
     }
   }
 
@@ -101,6 +115,9 @@ router.put("/:id", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -139,6 +156,9 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -172,6 +192,9 @@ router.put("/:productId/branch/:branchId/disable", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -205,6 +228,9 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 

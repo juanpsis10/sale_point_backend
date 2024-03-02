@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const { db } = require("../../server"); // Importa la instancia de conexión db desde server.js
+const knex = require("knex");
+const dbConfig = require("../../knexfile");
+const db = knex(dbConfig.development);
 
 router.post("/addclient", async (req, res) => {
   const { name, document, phone } = req.body;
@@ -26,6 +28,9 @@ router.post("/addclient", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -50,6 +55,9 @@ router.get("/allclients", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -82,6 +90,9 @@ router.put("/:id", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 

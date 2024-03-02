@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const { db } = require("../../server"); // Importa la instancia de conexión db desde server.js
+const knex = require("knex");
+const dbConfig = require("../../knexfile");
+const db = knex(dbConfig.development);
 
 router.get("/detallesVenta/:numero_documento", async (req, res) => {
   const { numero_documento } = req.params;
@@ -49,6 +51,9 @@ router.get("/detallesVenta/:numero_documento", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -105,6 +110,9 @@ router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -158,6 +166,9 @@ router.get("/ventas-del-dia", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -207,6 +218,9 @@ router.get("/total-ventas", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -239,6 +253,9 @@ router.get("/primercliente", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -306,6 +323,9 @@ router.post("/registrar-venta", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
@@ -352,6 +372,9 @@ router.get("/last-document-number", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    } finally {
+      // Cerrar la conexión a la base de datos
+      await db.destroy();
     }
   }
 
