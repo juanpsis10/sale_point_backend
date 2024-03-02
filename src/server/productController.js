@@ -3,11 +3,7 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("knex");
 const dbConfig = require("../../knexfile");
-// Middleware para abrir la conexión a la base de datos en cada solicitud
-router.use((req, res, next) => {
-  req.db = knex(dbConfig.development);
-  next();
-});
+const db = knex(dbConfig.development);
 
 router.post("/addproduct", async (req, res) => {
   const { name, description, code, branchId, price } = req.body;
@@ -15,13 +11,13 @@ router.post("/addproduct", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const [productId] = await req.db("product").insert({
+      const [productId] = await db("product").insert({
         name,
         description,
         code,
       });
 
-      await req.db("product_branch").insert({
+      await db("product_branch").insert({
         product_id: productId,
         branch_id: branchId,
         price,
@@ -222,12 +218,6 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error al activar producto en la sucursal" });
-});
-
-// Middleware para cerrar la conexión a la base de datos al final de cada solicitud
-router.use((req, res, next) => {
-  req.db.destroy();
-  next();
 });
 
 module.exports = router;

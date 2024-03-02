@@ -3,11 +3,7 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("knex");
 const dbConfig = require("../../knexfile");
-// Middleware para abrir la conexión a la base de datos en cada solicitud
-router.use((req, res, next) => {
-  req.db = knex(dbConfig.development);
-  next();
-});
+const db = knex(dbConfig.development);
 
 router.post("/addclient", async (req, res) => {
   const { name, document, phone } = req.body;
@@ -15,13 +11,13 @@ router.post("/addclient", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const [clientId] = await req.db("client").insert({
+      const [clientId] = await db("client").insert({
         name,
         document,
         phone,
       });
 
-      const newClient = await req.db("client").where({ id: clientId }).first();
+      const newClient = await db("client").where({ id: clientId }).first();
 
       res.status(201).json(newClient);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -45,7 +41,7 @@ router.get("/allclients", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const clients = await req.db.select().from("client");
+      const clients = await db.select().from("client");
 
       res.json(clients);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -71,13 +67,13 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await req.db("client").where({ id }).update({
+      await db("client").where({ id }).update({
         name,
         document,
         phone,
       });
 
-      const client = await req.db("client").where({ id }).first();
+      const client = await db("client").where({ id }).first();
 
       res.json(client);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -94,12 +90,6 @@ router.put("/:id", async (req, res) => {
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error al actualizar el cliente." });
-});
-
-// Middleware para cerrar la conexión a la base de datos al final de cada solicitud
-router.use((req, res, next) => {
-  req.db.destroy();
-  next();
 });
 
 module.exports = router;

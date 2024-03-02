@@ -3,11 +3,7 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("knex");
 const dbConfig = require("../../knexfile");
-// Middleware para abrir la conexión a la base de datos en cada solicitud
-router.use((req, res, next) => {
-  req.db = knex(dbConfig.development);
-  next();
-});
+const db = knex(dbConfig.development);
 
 router.get("/detallesVenta/:numero_documento", async (req, res) => {
   const { numero_documento } = req.params;
@@ -16,7 +12,7 @@ router.get("/detallesVenta/:numero_documento", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta SQL para obtener los detalles de la venta
-      const detallesVenta = await req.db.raw(`
+      const detallesVenta = await db.raw(`
         SELECT 
             product.name AS producto,
             product_branch.price AS precio,
@@ -70,7 +66,7 @@ router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta SQL para obtener los detalles de la venta individual
-      const ventaIndividual = await req.db.raw(`
+      const ventaIndividual = await db.raw(`
         SELECT 
             sale.document_number,
             product.name AS product_name,
@@ -136,13 +132,13 @@ router.get("/ventas-del-dia", async (req, res) => {
         partesFecha[2] + "-" + partesFecha[0] + "-" + partesFecha[1];
       console.log("fecha de ventas: " + formattedFecha);
       // Consulta SQL parametrizada para obtener las ventas del día
-      const result = await req.db
+      const result = await db
         .select(
           "u.username AS usuario",
           "c.name AS cliente",
           "sale.document_number AS numero_documento",
-          req.db.raw("MIN(sale.date) AS primer_fecha"),
-          req.db.raw("SUM(sale.total) AS total_venta"),
+          db.raw("MIN(sale.date) AS primer_fecha"),
+          db.raw("SUM(sale.total) AS total_venta"),
           "sale.payment_method" // Agregar la columna payment_method
         )
         .from("sale")
@@ -189,8 +185,8 @@ router.get("/total-ventas", async (req, res) => {
         partesFecha[2] + "-" + partesFecha[0] + "-" + partesFecha[1];
       console.log("fecha de ventas: " + formattedFecha);
       // Consulta SQL parametrizada para obtener el total de ventas del día
-      const result = await req.db
-        .select(req.db.raw("SUM(total) AS total_ventas"))
+      const result = await db
+        .select(db.raw("SUM(total) AS total_ventas"))
         .from("sale")
         .where("date", "LIKE", `${formattedFecha}%`); // Filtrar por la fecha del día especificado
 
@@ -228,7 +224,7 @@ router.get("/primercliente", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Obtener el primer cliente de la base de datos
-      const primerCliente = await req.db("client").first();
+      const primerCliente = await db("client").first();
       if (!primerCliente) {
         return res
           .status(404)
@@ -287,7 +283,7 @@ router.post("/registrar-venta", async (req, res) => {
 
       console.log("fecha formateada en la api: " + formattedDate);
       // Insertar la venta en la base de datos
-      await req.db("sale").insert({
+      await db("sale").insert({
         client_id,
         user_id,
         branch_id,
@@ -366,12 +362,6 @@ router.get("/last-document-number", async (req, res) => {
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error interno del servidor" });
-});
-
-// Middleware para cerrar la conexión a la base de datos al final de cada solicitud
-router.use((req, res, next) => {
-  req.db.destroy();
-  next();
 });
 
 module.exports = router;

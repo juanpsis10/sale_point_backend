@@ -3,11 +3,7 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("knex");
 const dbConfig = require("../../knexfile");
-// Middleware para abrir la conexión a la base de datos en cada solicitud
-router.use((req, res, next) => {
-  req.db = knex(dbConfig.development);
-  next();
-});
+const db = knex(dbConfig.development);
 
 router.delete("/eliminar_venta/:numeroDocumento", async (req, res) => {
   let retries = 0;
@@ -17,7 +13,7 @@ router.delete("/eliminar_venta/:numeroDocumento", async (req, res) => {
       const { numeroDocumento } = req.params;
 
       // Realizar la eliminación de la venta basada en el número de documento
-      await req.db("sale").where({ document_number: numeroDocumento }).del();
+      await db("sale").where({ document_number: numeroDocumento }).del();
 
       res.status(200).json({ message: "Venta eliminada exitosamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -50,13 +46,13 @@ router.get("/ventas-del-dia", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta SQL parametrizada para obtener las ventas del día
-      const result = await req.db
+      const result = await db
         .select(
           "u.username AS usuario",
           "c.name AS cliente",
           "sale.document_number AS numero_documento",
-          req.db.raw("MIN(sale.date) AS primer_fecha"),
-          req.db.raw("SUM(sale.total) AS total_venta"),
+          db.raw("MIN(sale.date) AS primer_fecha"),
+          db.raw("SUM(sale.total) AS total_venta"),
           "sale.payment_method" // Agregar la columna payment_method
         )
         .from("sale")
@@ -90,12 +86,6 @@ router.get("/ventas-del-dia", async (req, res) => {
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error interno del servidor" });
-});
-
-// Middleware para cerrar la conexión a la base de datos al final de cada solicitud
-router.use((req, res, next) => {
-  req.db.destroy();
-  next();
 });
 
 module.exports = router;
