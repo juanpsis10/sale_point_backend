@@ -295,8 +295,7 @@ router.post("/registrar-venta", async (req, res) => {
         payment_method, // Agregar el método de pago
       });
       // Actualizar el stock del producto en la sucursal
-      await req
-        .db("product_branch")
+      await db("product_branch")
         .where({ product_id, branch_id })
         .decrement("stock_quantity", cantidad_producto);
 
@@ -325,8 +324,7 @@ router.get("/last-document-number", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta para obtener el último número de documento
-      const lastDocument = await req
-        .db("sale")
+      const lastDocument = await db("sale")
         .orderBy("document_number", "desc")
         .select("document_number")
         .limit(1)

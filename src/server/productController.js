@@ -45,8 +45,7 @@ router.get("/allproducts", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const products = await req
-        .db("product")
+      const products = await db("product")
         .join("product_branch", "product.id", "=", "product_branch.product_id")
         .join("branch", "branch.id", "=", "product_branch.branch_id")
         .select(
@@ -85,8 +84,7 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const updatedProduct = await req
-        .db("product")
+      const updatedProduct = await db("product")
         .where({ id })
         .update({ name, description, code });
 
@@ -120,8 +118,7 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const updatedProductBranch = await req
-        .db("product_branch")
+      const updatedProductBranch = await db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ price, stock_quantity: stockQuantity });
 
@@ -160,8 +157,7 @@ router.put("/:productId/branch/:branchId/disable", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await req
-        .db("product_branch")
+      await db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "disable" });
 
@@ -194,8 +190,7 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await req
-        .db("product_branch")
+      await db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "active" });
 

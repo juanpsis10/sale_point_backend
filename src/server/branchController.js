@@ -70,8 +70,7 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await req
-        .db("branch")
+      await db("branch")
         .where({ id })
         .update({ name, location, manager, phone });
       const updatedBranch = await db("branch").where({ id }).first();
