@@ -3,7 +3,11 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("knex");
 const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+// Middleware para abrir la conexión a la base de datos en cada solicitud
+router.use((req, res, next) => {
+  req.db = knex(dbConfig.development);
+  next();
+});
 
 router.get("/detallesVenta/:numero_documento", async (req, res) => {
   const { numero_documento } = req.params;
@@ -51,9 +55,6 @@ router.get("/detallesVenta/:numero_documento", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -110,9 +111,6 @@ router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -166,9 +164,6 @@ router.get("/ventas-del-dia", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -218,9 +213,6 @@ router.get("/total-ventas", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -236,7 +228,7 @@ router.get("/primercliente", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Obtener el primer cliente de la base de datos
-      const primerCliente = await db("client").first();
+      const primerCliente = await req.db("client").first();
       if (!primerCliente) {
         return res
           .status(404)
@@ -253,9 +245,6 @@ router.get("/primercliente", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -298,7 +287,7 @@ router.post("/registrar-venta", async (req, res) => {
 
       console.log("fecha formateada en la api: " + formattedDate);
       // Insertar la venta en la base de datos
-      await db("sale").insert({
+      await req.db("sale").insert({
         client_id,
         user_id,
         branch_id,
@@ -310,7 +299,8 @@ router.post("/registrar-venta", async (req, res) => {
         payment_method, // Agregar el método de pago
       });
       // Actualizar el stock del producto en la sucursal
-      await db("product_branch")
+      await req
+        .db("product_branch")
         .where({ product_id, branch_id })
         .decrement("stock_quantity", cantidad_producto);
 
@@ -323,9 +313,6 @@ router.post("/registrar-venta", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -342,7 +329,8 @@ router.get("/last-document-number", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta para obtener el último número de documento
-      const lastDocument = await db("sale")
+      const lastDocument = await req
+        .db("sale")
         .orderBy("document_number", "desc")
         .select("document_number")
         .limit(1)
@@ -372,15 +360,18 @@ router.get("/last-document-number", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error interno del servidor" });
+});
+
+// Middleware para cerrar la conexión a la base de datos al final de cada solicitud
+router.use((req, res, next) => {
+  req.db.destroy();
+  next();
 });
 
 module.exports = router;

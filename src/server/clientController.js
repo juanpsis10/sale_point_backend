@@ -3,7 +3,11 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("knex");
 const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+// Middleware para abrir la conexión a la base de datos en cada solicitud
+router.use((req, res, next) => {
+  req.db = knex(dbConfig.development);
+  next();
+});
 
 router.post("/addclient", async (req, res) => {
   const { name, document, phone } = req.body;
@@ -11,13 +15,13 @@ router.post("/addclient", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const [clientId] = await db("client").insert({
+      const [clientId] = await req.db("client").insert({
         name,
         document,
         phone,
       });
 
-      const newClient = await db("client").where({ id: clientId }).first();
+      const newClient = await req.db("client").where({ id: clientId }).first();
 
       res.status(201).json(newClient);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -28,9 +32,6 @@ router.post("/addclient", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -55,9 +56,6 @@ router.get("/allclients", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -73,13 +71,13 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("client").where({ id }).update({
+      await req.db("client").where({ id }).update({
         name,
         document,
         phone,
       });
 
-      const client = await db("client").where({ id }).first();
+      const client = await req.db("client").where({ id }).first();
 
       res.json(client);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -90,15 +88,18 @@ router.put("/:id", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error al actualizar el cliente." });
+});
+
+// Middleware para cerrar la conexión a la base de datos al final de cada solicitud
+router.use((req, res, next) => {
+  req.db.destroy();
+  next();
 });
 
 module.exports = router;

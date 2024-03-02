@@ -3,7 +3,11 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("knex");
 const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+// Middleware para abrir la conexión a la base de datos en cada solicitud
+router.use((req, res, next) => {
+  req.db = knex(dbConfig.development);
+  next();
+});
 
 router.post("/addproduct", async (req, res) => {
   const { name, description, code, branchId, price } = req.body;
@@ -11,13 +15,13 @@ router.post("/addproduct", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const [productId] = await db("product").insert({
+      const [productId] = await req.db("product").insert({
         name,
         description,
         code,
       });
 
-      await db("product_branch").insert({
+      await req.db("product_branch").insert({
         product_id: productId,
         branch_id: branchId,
         price,
@@ -32,9 +36,6 @@ router.post("/addproduct", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -48,7 +49,8 @@ router.get("/allproducts", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const products = await db("product")
+      const products = await req
+        .db("product")
         .join("product_branch", "product.id", "=", "product_branch.product_id")
         .join("branch", "branch.id", "=", "product_branch.branch_id")
         .select(
@@ -72,15 +74,6 @@ router.get("/allproducts", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      try {
-        // Cerrar la conexión a la base de datos
-        await db.destroy();
-        console.log("Conexión cerrada correctamente");
-      } catch (error) {
-        console.error("Error al cerrar la conexión:", error);
-      }
     }
   }
 
@@ -96,7 +89,8 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const updatedProduct = await db("product")
+      const updatedProduct = await req
+        .db("product")
         .where({ id })
         .update({ name, description, code });
 
@@ -115,9 +109,6 @@ router.put("/:id", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -133,7 +124,8 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const updatedProductBranch = await db("product_branch")
+      const updatedProductBranch = await req
+        .db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ price, stock_quantity: stockQuantity });
 
@@ -156,9 +148,6 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -175,7 +164,8 @@ router.put("/:productId/branch/:branchId/disable", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("product_branch")
+      await req
+        .db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "disable" });
 
@@ -192,9 +182,6 @@ router.put("/:productId/branch/:branchId/disable", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -211,7 +198,8 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("product_branch")
+      await req
+        .db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "active" });
 
@@ -228,15 +216,18 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error al activar producto en la sucursal" });
+});
+
+// Middleware para cerrar la conexión a la base de datos al final de cada solicitud
+router.use((req, res, next) => {
+  req.db.destroy();
+  next();
 });
 
 module.exports = router;

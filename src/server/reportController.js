@@ -3,7 +3,11 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("knex");
 const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+// Middleware para abrir la conexión a la base de datos en cada solicitud
+router.use((req, res, next) => {
+  req.db = knex(dbConfig.development);
+  next();
+});
 
 router.delete("/eliminar_venta/:numeroDocumento", async (req, res) => {
   let retries = 0;
@@ -13,7 +17,7 @@ router.delete("/eliminar_venta/:numeroDocumento", async (req, res) => {
       const { numeroDocumento } = req.params;
 
       // Realizar la eliminación de la venta basada en el número de documento
-      await db("sale").where({ document_number: numeroDocumento }).del();
+      await req.db("sale").where({ document_number: numeroDocumento }).del();
 
       res.status(200).json({ message: "Venta eliminada exitosamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -24,9 +28,6 @@ router.delete("/eliminar_venta/:numeroDocumento", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
@@ -83,15 +84,18 @@ router.get("/ventas-del-dia", async (req, res) => {
       );
       retries++;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
-    } finally {
-      // Cerrar la conexión a la base de datos
-      await db.destroy();
     }
   }
 
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error interno del servidor" });
+});
+
+// Middleware para cerrar la conexión a la base de datos al final de cada solicitud
+router.use((req, res, next) => {
+  req.db.destroy();
+  next();
 });
 
 module.exports = router;
