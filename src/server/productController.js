@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
-const db = knex(dbConfig.development);
+const db = require("../../server");
 
 router.post("/addproduct", async (req, res) => {
   const { name, description, code, branchId, price } = req.body;
@@ -11,8 +9,6 @@ router.post("/addproduct", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       const [productId] = await db("product").insert({
         name,
         description,
@@ -49,8 +45,6 @@ router.get("/allproducts", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       const products = await db("product")
         .join("product_branch", "product.id", "=", "product_branch.product_id")
         .join("branch", "branch.id", "=", "product_branch.branch_id")
@@ -92,8 +86,6 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       const updatedProduct = await db("product")
         .where({ id })
         .update({ name, description, code });
@@ -130,8 +122,6 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       const updatedProductBranch = await db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ price, stock_quantity: stockQuantity });
@@ -162,11 +152,9 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
 
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
-  res
-    .status(500)
-    .json({
-      message: "Error al actualizar los datos de la sucursal del producto",
-    });
+  res.status(500).json({
+    message: "Error al actualizar los datos de la sucursal del producto",
+  });
 });
 
 router.put("/:productId/branch/:branchId/disable", async (req, res) => {
@@ -175,8 +163,6 @@ router.put("/:productId/branch/:branchId/disable", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       await db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "disable" });
@@ -212,8 +198,6 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       await db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "active" });

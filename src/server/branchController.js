@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
-const db = knex(dbConfig.development);
+const db = require("../../server");
 
 router.post("/addbranch", async (req, res) => {
   const { name, location, manager, phone } = req.body;
@@ -11,8 +9,6 @@ router.post("/addbranch", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       const [branchId] = await db("branch").insert({
         name,
         location,
@@ -46,8 +42,6 @@ router.get("/allbranches", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       const branches = await db.select().from("branch");
 
       await db.destroy(); // Cerrar la conexión después de obtener las sucursales
@@ -78,8 +72,6 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       await db("branch")
         .where({ id })
         .update({ name, location, manager, phone });
@@ -112,8 +104,6 @@ router.put("/:id/disable", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       await db("branch").where({ id }).update({ state: "disabled" });
 
       await db.destroy(); // Cerrar la conexión después de desactivar el branch
@@ -143,8 +133,6 @@ router.put("/:id/activate", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       await db("branch").where({ id }).update({ state: "active" });
 
       await db.destroy(); // Cerrar la conexión después de activar el branch

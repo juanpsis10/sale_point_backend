@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
-const db = knex(dbConfig.development);
+const db = require("../../server");
 
 router.delete("/eliminar_venta/:numeroDocumento", async (req, res) => {
   let retries = 0;
@@ -45,8 +43,6 @@ router.get("/ventas-del-dia", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       // Consulta SQL parametrizada para obtener las ventas del día
       const result = await db
         .select(

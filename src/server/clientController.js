@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
-const db = knex(dbConfig.development);
+const db = require("../../server");
 
 router.post("/addclient", async (req, res) => {
   const { name, document, phone } = req.body;
@@ -11,8 +9,6 @@ router.post("/addclient", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       const [clientId] = await db("client").insert({
         name,
         document,
@@ -45,8 +41,6 @@ router.get("/allclients", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       const clients = await db.select().from("client");
 
       await db.destroy(); // Cerrar la conexión después de obtener los clientes
@@ -75,8 +69,6 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       await db("client").where({ id }).update({
         name,
         document,

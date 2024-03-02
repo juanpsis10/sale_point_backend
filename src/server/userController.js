@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
-const db = knex(dbConfig.development);
+const db = require("../../server");
 
 router.post("/adduser", async (req, res) => {
   let retries = 0;

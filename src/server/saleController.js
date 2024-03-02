@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
 const MAX_RETRIES = 3; // Número máximo de intentos
-const db = knex(dbConfig.development);
+const db = require("../../server");
 
 router.get("/detallesVenta/:numero_documento", async (req, res) => {
   const { numero_documento } = req.params;
@@ -11,8 +9,6 @@ router.get("/detallesVenta/:numero_documento", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       // Consulta SQL para obtener los detalles de la venta
       const detallesVenta = await db.raw(`
         SELECT 
@@ -67,8 +63,6 @@ router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const db = knex(dbConfig.development); // Establecer una nueva conexión con la base de datos en cada intento
-
       // Consulta SQL para obtener los detalles de la venta individual
       const ventaIndividual = await db.raw(`
         SELECT 
