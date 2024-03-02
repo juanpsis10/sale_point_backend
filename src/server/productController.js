@@ -21,8 +21,6 @@ router.post("/addproduct", async (req, res) => {
         price,
       });
 
-      await db.destroy(); // Cerrar la conexión después de agregar el producto
-
       res.status(201).json({ message: "Producto agregado correctamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -60,8 +58,6 @@ router.get("/allproducts", async (req, res) => {
           "branch.name as branch_name"
         );
 
-      await db.destroy(); // Cerrar la conexión después de obtener los productos
-
       res.json(products);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -89,8 +85,6 @@ router.put("/:id", async (req, res) => {
       const updatedProduct = await db("product")
         .where({ id })
         .update({ name, description, code });
-
-      await db.destroy(); // Cerrar la conexión después de actualizar el producto
 
       if (updatedProduct === 0) {
         return res.status(404).json({ message: "Producto no encontrado" });
@@ -125,8 +119,6 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
       const updatedProductBranch = await db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ price, stock_quantity: stockQuantity });
-
-      await db.destroy(); // Cerrar la conexión después de actualizar los datos de la sucursal del producto
 
       if (updatedProductBranch === 0) {
         return res
@@ -167,8 +159,6 @@ router.put("/:productId/branch/:branchId/disable", async (req, res) => {
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "disable" });
 
-      await db.destroy(); // Cerrar la conexión después de desactivar el producto en la sucursal
-
       res
         .status(200)
         .json({ message: "Producto desactivado correctamente en la sucursal" });
@@ -201,8 +191,6 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
       await db("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "active" });
-
-      await db.destroy(); // Cerrar la conexión después de activar el producto en la sucursal
 
       res
         .status(200)

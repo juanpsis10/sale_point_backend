@@ -60,8 +60,6 @@ router.get("/ventas-del-dia", async (req, res) => {
         .groupBy("sale.document_number")
         .orderBy("sale.document_number", "desc");
 
-      await db.destroy(); // Cerrar la conexión después de obtener las ventas del día
-
       if (!result || result.length === 0) {
         return res.status(404).json({
           error: "No se encontraron ventas para la fecha especificada",

@@ -18,8 +18,6 @@ router.post("/addbranch", async (req, res) => {
 
       const newBranch = await db("branch").where({ id: branchId }).first();
 
-      await db.destroy(); // Cerrar la conexión después de agregar la sucursal
-
       res.status(201).json(newBranch);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -43,8 +41,6 @@ router.get("/allbranches", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       const branches = await db.select().from("branch");
-
-      await db.destroy(); // Cerrar la conexión después de obtener las sucursales
 
       res.json(branches);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -77,8 +73,6 @@ router.put("/:id", async (req, res) => {
         .update({ name, location, manager, phone });
       const updatedBranch = await db("branch").where({ id }).first();
 
-      await db.destroy(); // Cerrar la conexión después de actualizar la sucursal
-
       res.json(updatedBranch);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -106,8 +100,6 @@ router.put("/:id/disable", async (req, res) => {
     try {
       await db("branch").where({ id }).update({ state: "disabled" });
 
-      await db.destroy(); // Cerrar la conexión después de desactivar el branch
-
       res.json({ message: "Branch desactivado correctamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -134,8 +126,6 @@ router.put("/:id/activate", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       await db("branch").where({ id }).update({ state: "active" });
-
-      await db.destroy(); // Cerrar la conexión después de activar el branch
 
       res.status(200).json({ message: "Sucursal activada correctamente" });
       return; // Salir del bucle y devolver la respuesta exitosa

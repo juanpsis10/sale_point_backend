@@ -17,8 +17,6 @@ router.post("/addclient", async (req, res) => {
 
       const newClient = await db("client").where({ id: clientId }).first();
 
-      await db.destroy(); // Cerrar la conexión después de agregar el cliente
-
       res.status(201).json(newClient);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -42,8 +40,6 @@ router.get("/allclients", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       const clients = await db.select().from("client");
-
-      await db.destroy(); // Cerrar la conexión después de obtener los clientes
 
       res.json(clients);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -76,8 +72,6 @@ router.put("/:id", async (req, res) => {
       });
 
       const client = await db("client").where({ id }).first();
-
-      await db.destroy(); // Cerrar la conexión después de actualizar el cliente
 
       res.json(client);
       return; // Salir del bucle y devolver la respuesta exitosa
