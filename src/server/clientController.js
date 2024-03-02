@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const db = require("../../server");
+const { db } = require("../../server"); // Importa la instancia de conexión db desde server.js
 
 router.post("/addclient", async (req, res) => {
   const { name, document, phone } = req.body;
