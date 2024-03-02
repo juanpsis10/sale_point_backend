@@ -46,7 +46,7 @@ router.get("/allbranches", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const branches = await db.select().from("branch");
+      const branches = await req.db.select().from("branch");
 
       res.json(branches);
       return; // Salir del bucle y devolver la respuesta exitosa

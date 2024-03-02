@@ -45,7 +45,7 @@ router.get("/allclients", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const clients = await db.select().from("client");
+      const clients = await req.db.select().from("client");
 
       res.json(clients);
       return; // Salir del bucle y devolver la respuesta exitosa

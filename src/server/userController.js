@@ -43,7 +43,7 @@ router.get("/allusers", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const users = await db.select().from("users");
+      const users = await req.db.select().from("users");
       res.json(users);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {

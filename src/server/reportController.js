@@ -50,13 +50,13 @@ router.get("/ventas-del-dia", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta SQL parametrizada para obtener las ventas del día
-      const result = await db
+      const result = await req.db
         .select(
           "u.username AS usuario",
           "c.name AS cliente",
           "sale.document_number AS numero_documento",
-          db.raw("MIN(sale.date) AS primer_fecha"),
-          db.raw("SUM(sale.total) AS total_venta"),
+          req.db.raw("MIN(sale.date) AS primer_fecha"),
+          req.db.raw("SUM(sale.total) AS total_venta"),
           "sale.payment_method" // Agregar la columna payment_method
         )
         .from("sale")

@@ -16,7 +16,7 @@ router.get("/detallesVenta/:numero_documento", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta SQL para obtener los detalles de la venta
-      const detallesVenta = await db.raw(`
+      const detallesVenta = await req.db.raw(`
         SELECT 
             product.name AS producto,
             product_branch.price AS precio,
@@ -70,7 +70,7 @@ router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta SQL para obtener los detalles de la venta individual
-      const ventaIndividual = await db.raw(`
+      const ventaIndividual = await req.db.raw(`
         SELECT 
             sale.document_number,
             product.name AS product_name,
@@ -136,13 +136,13 @@ router.get("/ventas-del-dia", async (req, res) => {
         partesFecha[2] + "-" + partesFecha[0] + "-" + partesFecha[1];
       console.log("fecha de ventas: " + formattedFecha);
       // Consulta SQL parametrizada para obtener las ventas del día
-      const result = await db
+      const result = await req.db
         .select(
           "u.username AS usuario",
           "c.name AS cliente",
           "sale.document_number AS numero_documento",
-          db.raw("MIN(sale.date) AS primer_fecha"),
-          db.raw("SUM(sale.total) AS total_venta"),
+          req.db.raw("MIN(sale.date) AS primer_fecha"),
+          req.db.raw("SUM(sale.total) AS total_venta"),
           "sale.payment_method" // Agregar la columna payment_method
         )
         .from("sale")
@@ -189,8 +189,8 @@ router.get("/total-ventas", async (req, res) => {
         partesFecha[2] + "-" + partesFecha[0] + "-" + partesFecha[1];
       console.log("fecha de ventas: " + formattedFecha);
       // Consulta SQL parametrizada para obtener el total de ventas del día
-      const result = await db
-        .select(db.raw("SUM(total) AS total_ventas"))
+      const result = await req.db
+        .select(req.db.raw("SUM(total) AS total_ventas"))
         .from("sale")
         .where("date", "LIKE", `${formattedFecha}%`); // Filtrar por la fecha del día especificado
 
