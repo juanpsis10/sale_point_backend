@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+const knex = require("../../knexInstance");
 
 router.post("/addproduct", async (req, res) => {
   const { name, description, code, branchId, price } = req.body;
@@ -11,13 +9,13 @@ router.post("/addproduct", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const [productId] = await db("product").insert({
+      const [productId] = await knex("product").insert({
         name,
         description,
         code,
       });
 
-      await db("product_branch").insert({
+      await knex("product_branch").insert({
         product_id: productId,
         branch_id: branchId,
         price,
@@ -45,7 +43,7 @@ router.get("/allproducts", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const products = await db("product")
+      const products = await knex("product")
         .join("product_branch", "product.id", "=", "product_branch.product_id")
         .join("branch", "branch.id", "=", "product_branch.branch_id")
         .select(
@@ -84,7 +82,7 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const updatedProduct = await db("product")
+      const updatedProduct = await knex("product")
         .where({ id })
         .update({ name, description, code });
 
@@ -118,7 +116,7 @@ router.put("/:productId/branch/:branchId", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const updatedProductBranch = await db("product_branch")
+      const updatedProductBranch = await knex("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ price, stock_quantity: stockQuantity });
 
@@ -157,7 +155,7 @@ router.put("/:productId/branch/:branchId/disable", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("product_branch")
+      await knex("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "disable" });
 
@@ -190,7 +188,7 @@ router.put("/:productId/branch/:branchId/activate", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("product_branch")
+      await knex("product_branch")
         .where({ product_id: productId, branch_id: branchId })
         .update({ state: "active" });
 

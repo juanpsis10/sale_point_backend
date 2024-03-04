@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+const knex = require("../../knexInstance");
 
 router.post("/adduser", async (req, res) => {
   let retries = 0;
@@ -11,12 +9,12 @@ router.post("/adduser", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       const { username, password, role } = req.body;
-      const [userId] = await db("users").insert({
+      const [userId] = await knex("users").insert({
         username,
         password,
         role,
       });
-      const newUser = await db("users").where({ id: userId }).first();
+      const newUser = await knex("users").where({ id: userId }).first();
       res.status(201).json(newUser);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -39,7 +37,7 @@ router.get("/allusers", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const users = await db.select().from("users");
+      const users = await knex.select().from("users");
       res.json(users);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -70,8 +68,8 @@ router.put("/:id", async (req, res) => {
         updatedUser.password = password;
       }
 
-      await db("users").where({ id }).update(updatedUser);
-      const user = await db("users").where({ id }).first();
+      await knex("users").where({ id }).update(updatedUser);
+      const user = await knex("users").where({ id }).first();
       res.json(user);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -96,7 +94,7 @@ router.put("/:id/activate", async (req, res) => {
     try {
       const { id } = req.params;
 
-      await db("users").where({ id }).update({ state: "active" });
+      await knex("users").where({ id }).update({ state: "active" });
       res.status(200).json({ message: "Usuario activado correctamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -121,7 +119,7 @@ router.put("/:id/disable", async (req, res) => {
     try {
       const { id } = req.params;
 
-      await db("users").where({ id }).update({ state: "disable" });
+      await knex("users").where({ id }).update({ state: "disable" });
       res.status(200).json({ message: "Usuario desactivado correctamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {

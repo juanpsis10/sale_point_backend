@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+const knex = require("../../knexInstance");
 
 router.post("/addbranch", async (req, res) => {
   const { name, location, manager, phone } = req.body;
@@ -11,14 +9,14 @@ router.post("/addbranch", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const [branchId] = await db("branch").insert({
+      const [branchId] = await knex("branch").insert({
         name,
         location,
         manager,
         phone,
       });
 
-      const newBranch = await db("branch").where({ id: branchId }).first();
+      const newBranch = await knex("branch").where({ id: branchId }).first();
 
       res.status(201).json(newBranch);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -42,7 +40,7 @@ router.get("/allbranches", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const branches = await db.select().from("branch");
+      const branches = await knex.select().from("branch");
 
       res.json(branches);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -70,10 +68,10 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("branch")
+      await knex("branch")
         .where({ id })
         .update({ name, location, manager, phone });
-      const updatedBranch = await db("branch").where({ id }).first();
+      const updatedBranch = await knex("branch").where({ id }).first();
 
       res.json(updatedBranch);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -100,7 +98,7 @@ router.put("/:id/disable", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("branch").where({ id }).update({ state: "disabled" });
+      await knex("branch").where({ id }).update({ state: "disabled" });
 
       res.json({ message: "Branch desactivado correctamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -127,7 +125,7 @@ router.put("/:id/activate", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("branch").where({ id }).update({ state: "active" });
+      await knex("branch").where({ id }).update({ state: "active" });
 
       res.status(200).json({ message: "Sucursal activada correctamente" });
       return; // Salir del bucle y devolver la respuesta exitosa

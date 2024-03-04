@@ -1,7 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const knex = require("knex");
-const dbConfig = require("./knexfile");
 const cron = require("node-cron"); // Importa la biblioteca de tareas programadas
 const MAX_RETRIES = 3; // Número máximo de intentos
 const branchController = require("./src/server/branchController");
@@ -11,13 +9,10 @@ const productController = require("./src/server/productController");
 const saleController = require("./src/server/saleController");
 const reportController = require("./src/server/reportController");
 
+const knex = require("./knexInstance");
+
 // Crear una instancia de la aplicación Express
 const app = express();
-
-// Configurar el motor de plantillas y otras configuraciones de Express si es necesario
-
-// Crear una conexión a la base de datos SQLite utilizando Knex
-const db = knex(dbConfig.development);
 
 // Agregar middleware para habilitar las solicitudes CORS
 app.use(cors());
@@ -41,7 +36,7 @@ app.get("/user", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const users = await db.select().from("users");
+      const users = await knex.select().from("users");
       res.json(users);
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
@@ -65,7 +60,7 @@ app.post("/validate-user", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const user = await db("users").where({ username, password }).first();
+      const user = await knex("users").where({ username, password }).first();
       if (user) {
         res
           .status(200)
@@ -99,7 +94,7 @@ app.get("/keep-alive", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Realizar la consulta SQL para obtener el nombre del cliente con ID 1
-      const client = await db("client").select("name").where("id", 1).first();
+      const client = await knex("client").select("name").where("id", 1).first();
 
       console.log("Token escuchando en la base de datos.");
 

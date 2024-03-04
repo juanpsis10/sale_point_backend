@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+const knex = require("../../knexInstance");
 
 router.post("/addclient", async (req, res) => {
   const { name, document, phone } = req.body;
@@ -11,13 +9,13 @@ router.post("/addclient", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const [clientId] = await db("client").insert({
+      const [clientId] = await knex("client").insert({
         name,
         document,
         phone,
       });
 
-      const newClient = await db("client").where({ id: clientId }).first();
+      const newClient = await knex("client").where({ id: clientId }).first();
 
       res.status(201).json(newClient);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -41,7 +39,7 @@ router.get("/allclients", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      const clients = await db.select().from("client");
+      const clients = await knex.select().from("client");
 
       res.json(clients);
       return; // Salir del bucle y devolver la respuesta exitosa
@@ -67,13 +65,13 @@ router.put("/:id", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      await db("client").where({ id }).update({
+      await knex("client").where({ id }).update({
         name,
         document,
         phone,
       });
 
-      const client = await db("client").where({ id }).first();
+      const client = await knex("client").where({ id }).first();
 
       res.json(client);
       return; // Salir del bucle y devolver la respuesta exitosa

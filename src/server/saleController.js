@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
-const knex = require("knex");
-const dbConfig = require("../../knexfile");
-const db = knex(dbConfig.development);
+const knex = require("../../knexInstance");
 
 router.get("/detallesVenta/:numero_documento", async (req, res) => {
   const { numero_documento } = req.params;
@@ -12,7 +10,7 @@ router.get("/detallesVenta/:numero_documento", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta SQL para obtener los detalles de la venta
-      const detallesVenta = await db.raw(`
+      const detallesVenta = await knex.raw(`
         SELECT 
             product.name AS producto,
             product_branch.price AS precio,
@@ -66,7 +64,7 @@ router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta SQL para obtener los detalles de la venta individual
-      const ventaIndividual = await db.raw(`
+      const ventaIndividual = await knex.raw(`
         SELECT 
             sale.document_number,
             product.name AS product_name,
@@ -132,13 +130,13 @@ router.get("/ventas-del-dia", async (req, res) => {
         partesFecha[2] + "-" + partesFecha[0] + "-" + partesFecha[1];
       console.log("fecha de ventas: " + formattedFecha);
       // Consulta SQL parametrizada para obtener las ventas del día
-      const result = await db
+      const result = await knex
         .select(
           "u.username AS usuario",
           "c.name AS cliente",
           "sale.document_number AS numero_documento",
-          db.raw("MIN(sale.date) AS primer_fecha"),
-          db.raw("SUM(sale.total) AS total_venta"),
+          knex.raw("MIN(sale.date) AS primer_fecha"),
+          knex.raw("SUM(sale.total) AS total_venta"),
           "sale.payment_method" // Agregar la columna payment_method
         )
         .from("sale")
@@ -185,8 +183,8 @@ router.get("/total-ventas", async (req, res) => {
         partesFecha[2] + "-" + partesFecha[0] + "-" + partesFecha[1];
       console.log("fecha de ventas: " + formattedFecha);
       // Consulta SQL parametrizada para obtener el total de ventas del día
-      const result = await db
-        .select(db.raw("SUM(total) AS total_ventas"))
+      const result = await knex
+        .select(knex.raw("SUM(total) AS total_ventas"))
         .from("sale")
         .where("date", "LIKE", `${formattedFecha}%`); // Filtrar por la fecha del día especificado
 
@@ -224,7 +222,7 @@ router.get("/primercliente", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Obtener el primer cliente de la base de datos
-      const primerCliente = await db("client").first();
+      const primerCliente = await knex("client").first();
       if (!primerCliente) {
         return res
           .status(404)
@@ -283,7 +281,7 @@ router.post("/registrar-venta", async (req, res) => {
 
       console.log("fecha formateada en la api: " + formattedDate);
       // Insertar la venta en la base de datos
-      await db("sale").insert({
+      await knex("sale").insert({
         client_id,
         user_id,
         branch_id,
@@ -295,7 +293,7 @@ router.post("/registrar-venta", async (req, res) => {
         payment_method, // Agregar el método de pago
       });
       // Actualizar el stock del producto en la sucursal
-      await db("product_branch")
+      await knex("product_branch")
         .where({ product_id, branch_id })
         .decrement("stock_quantity", cantidad_producto);
 
@@ -324,7 +322,7 @@ router.get("/last-document-number", async (req, res) => {
   while (retries < MAX_RETRIES) {
     try {
       // Consulta para obtener el último número de documento
-      const lastDocument = await db("sale")
+      const lastDocument = await knex("sale")
         .orderBy("document_number", "desc")
         .select("document_number")
         .limit(1)
