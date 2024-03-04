@@ -12,8 +12,31 @@ router.delete("/eliminar_venta/:numeroDocumento", async (req, res) => {
     try {
       const { numeroDocumento } = req.params;
 
-      // Realizar la eliminación de la venta basada en el número de documento
-      await db("sale").where({ document_number: numeroDocumento }).del();
+      // Obtener todas las ventas con el mismo número de documento
+      const ventas = await db("sale").where({
+        document_number: numeroDocumento,
+      });
+
+      if (ventas.length === 0) {
+        return res
+          .status(404)
+          .json({
+            error: "No se encontraron ventas con este número de documento",
+          });
+      }
+
+      // Eliminar cada venta y restablecer el stock correspondiente
+      await Promise.all(
+        ventas.map(async (venta) => {
+          // Eliminar la venta de la tabla 'sale'
+          await db("sale").where({ id: venta.id }).del();
+
+          // Restablecer el stock del producto en la sucursal correspondiente
+          await db("product_branch")
+            .where({ product_id: venta.product_id, branch_id: venta.branch_id })
+            .increment("stock_quantity", venta.cantidad_producto);
+        })
+      );
 
       res.status(200).json({ message: "Venta eliminada exitosamente" });
       return; // Salir del bucle y devolver la respuesta exitosa
