@@ -72,6 +72,7 @@ router.get("/ventas-del-dia", async (req, res) => {
           "sale.document_number AS numero_documento",
           knex.raw("MIN(sale.date) AS primer_fecha"),
           knex.raw("SUM(sale.total) AS total_venta"),
+          knex.raw("MAX(sale.print_count) AS print_count"), // Obtener el máximo de print_count
           "sale.payment_method" // Agregar la columna payment_method
         )
         .from("sale")
