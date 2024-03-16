@@ -63,37 +63,45 @@ router.get("/imprimirIndividual/:numero_documento", async (req, res) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      // Consulta SQL para obtener los detalles de la venta individual
-      const ventaIndividual = await knex.raw(`
-        SELECT 
-            sale.document_number,
-            product.name AS product_name,
-            product_branch.price AS unit_price,
-            sale.cantidad_producto AS quantity
-        FROM 
-            sale
-        JOIN 
-            product ON sale.product_id = product.id
-        JOIN 
-            product_branch ON sale.product_id = product_branch.product_id
-        WHERE 
-            sale.document_number = '${numero_documento}';
-      `);
+      let ventaIndividual;
+      await knex.transaction(async (trx) => {
+        // Consulta SQL para obtener los detalles de la venta individual
+        ventaIndividual = await trx.raw(`
+          SELECT 
+              sale.document_number,
+              product.name AS product_name,
+              product_branch.price AS unit_price,
+              sale.cantidad_producto AS quantity
+          FROM 
+              sale
+          JOIN 
+              product ON sale.product_id = product.id
+          JOIN 
+              product_branch ON sale.product_id = product_branch.product_id
+          WHERE 
+              sale.document_number = '${numero_documento}';
+        `);
 
-      // Verificar si se encontraron resultados
-      if (ventaIndividual.length === 0) {
-        return res.status(404).json({ message: "Venta no encontrada" });
-      }
+        // Verificar si se encontraron resultados
+        if (ventaIndividual.length === 0) {
+          return res.status(404).json({ message: "Venta no encontrada" });
+        }
 
-      console.log("Datos de la venta individual:", ventaIndividual);
-      // Imprimir los datos de cada producto en la consola
-      ventaIndividual.forEach((producto) => {
-        console.log("Nombre del producto:", producto.product_name);
-        console.log("Cantidad:", producto.quantity);
+        console.log("Datos de la venta individual:", ventaIndividual);
+        // Imprimir los datos de cada producto en la consola
+        ventaIndividual.forEach((producto) => {
+          console.log("Nombre del producto:", producto.product_name);
+          console.log("Cantidad:", producto.quantity);
+        });
+
+        // Enviar los detalles de la venta individual como respuesta
+        res.status(200).json(ventaIndividual);
+
+        // Incrementar el contador print_count
+        await trx("sale")
+          .where("document_number", numero_documento)
+          .increment("print_count", 1);
       });
-
-      // Enviar los detalles de la venta individual como respuesta
-      res.status(200).json(ventaIndividual);
 
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
