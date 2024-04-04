@@ -3,6 +3,23 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("../../knexInstance");
 
+// Ruta para buscar clientes por documento o nombre
+router.get("/search", async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    // Realizar la búsqueda en la base de datos
+    const clients = await knex("client")
+      .where("document", "like", `%${query}%`)
+      .orWhere("name", "like", `%${query}%`);
+
+    res.status(200).json(clients);
+  } catch (error) {
+    console.error("Error al buscar clientes:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 router.post("/addclient", async (req, res) => {
   const { name, document, phone } = req.body;
   let retries = 0;
