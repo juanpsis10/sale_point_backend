@@ -8,6 +8,7 @@ const clientController = require("./src/server/clientController");
 const productController = require("./src/server/productController");
 const saleController = require("./src/server/saleController");
 const reportController = require("./src/server/reportController");
+const requestdniController = require("./src/server/requestdniController"); // Importa el controlador del request de DNI
 
 const knex = require("./knexInstance");
 
@@ -29,6 +30,7 @@ app.use("/client", clientController);
 app.use("/product", productController);
 app.use("/sale", saleController);
 app.use("/report", reportController);
+app.use("/consultadni", requestdniController);
 
 // Rutas de ejemplo para consultar la tabla 'users'
 app.get("/user", async (req, res) => {
