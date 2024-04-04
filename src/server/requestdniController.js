@@ -5,7 +5,7 @@ const router = express.Router();
 const API_TOKEN = "apis-token-7997.wyE-qDmwo0usY3M2B9Lu7NSZpSZktkY-";
 const knex = require("../../knexInstance");
 
-router.get("/cliente/:documento", async (req, res) => {
+router.get("/apicliente/:documento", async (req, res) => {
   const documento = req.params.documento;
 
   try {
