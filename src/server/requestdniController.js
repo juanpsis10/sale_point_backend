@@ -1,6 +1,6 @@
+require("isomorphic-fetch");
 const express = require("express");
 const router = express.Router();
-const fetch = require("node-fetch");
 
 const API_TOKEN = "apis-token-7997.wyE-qDmwo0usY3M2B9Lu7NSZpSZktkY-";
 const knex = require("../../knexInstance");
