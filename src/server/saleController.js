@@ -3,26 +3,28 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("../../knexInstance");
 
-router.get("/cliente/:documento", async (req, res) => {
-  const documento = req.params.documento; // Obtener el documento de identidad de los parámetros de la URL
+router.post("/apiaddclient", async (req, res) => {
+  const { name, document } = req.body;
   let retries = 0;
 
   while (retries < MAX_RETRIES) {
     try {
-      // Buscar el cliente por documento de identidad en la base de datos
-      const cliente = await knex("client")
-        .where({ document: documento })
-        .first();
-      if (!cliente) {
-        return res.status(404).json({ message: "Cliente no encontrado." });
-      }
-      res.json(cliente);
+      // Insertar el nuevo cliente en la base de datos
+      const [clientId] = await knex("client").insert({
+        name,
+        document,
+      });
+
+      // Recuperar el cliente recién agregado
+      const newClient = await knex("client").where({ id: clientId }).first();
+
+      // Devolver el cliente recién agregado como respuesta
+      res.status(201).json(newClient);
+
       return; // Salir del bucle y devolver la respuesta exitosa
     } catch (error) {
       console.error(
-        `Error al buscar cliente por documento de identidad (Intento ${
-          retries + 1
-        }/${MAX_RETRIES}):`,
+        `Error al agregar cliente (Intento ${retries + 1}/${MAX_RETRIES}):`,
         error
       );
       retries++;
@@ -32,10 +34,7 @@ router.get("/cliente/:documento", async (req, res) => {
 
   // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
-  res.status(500).json({
-    error:
-      "Error interno del servidor al buscar cliente por documento de identidad.",
-  });
+  res.status(500).json({ error: "Error interno del servidor" });
 });
 
 router.get("/detallesVenta/:numero_documento", async (req, res) => {
