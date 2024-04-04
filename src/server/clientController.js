@@ -77,7 +77,7 @@ router.get("/allclients", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { name, document, phone } = req.body;
+  const { name, document, phone, points } = req.body;
   let retries = 0;
 
   while (retries < MAX_RETRIES) {
@@ -86,6 +86,7 @@ router.put("/:id", async (req, res) => {
         name,
         document,
         phone,
+        points, // Agregar la actualización de la columna points
       });
 
       const client = await knex("client").where({ id }).first();
