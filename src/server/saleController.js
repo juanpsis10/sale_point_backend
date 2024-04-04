@@ -307,6 +307,15 @@ router.post("/registrar-venta", async (req, res) => {
         date, // Agregar la fecha y hora de la venta
         payment_method, // Agregar el método de pago
       } = req.body;
+
+      // Actualizar la cantidad de puntos del cliente
+      const updatedClient = await knex("client")
+        .where({ id: client_id })
+        .increment("points", Math.floor(total));
+
+      if (!updatedClient) {
+        return res.status(404).json({ error: "Cliente no encontrado" });
+      }
       // Crear un objeto de fecha a partir de la cadena recibida
       const fechaHora = new Date(date);
 
