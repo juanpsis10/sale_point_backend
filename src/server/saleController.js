@@ -3,6 +3,41 @@ const router = express.Router();
 const MAX_RETRIES = 3; // Número máximo de intentos
 const knex = require("../../knexInstance");
 
+router.get("/cliente/:documento", async (req, res) => {
+  const documento = req.params.documento; // Obtener el documento de identidad de los parámetros de la URL
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      // Buscar el cliente por documento de identidad en la base de datos
+      const cliente = await knex("client")
+        .where({ document: documento })
+        .first();
+      if (!cliente) {
+        return res.status(404).json({ message: "Cliente no encontrado." });
+      }
+      res.json(cliente);
+      return; // Salir del bucle y devolver la respuesta exitosa
+    } catch (error) {
+      console.error(
+        `Error al buscar cliente por documento de identidad (Intento ${
+          retries + 1
+        }/${MAX_RETRIES}):`,
+        error
+      );
+      retries++;
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+    }
+  }
+
+  // Si se alcanza el número máximo de intentos sin éxito
+  console.error("Se excedió el número máximo de intentos sin éxito");
+  res.status(500).json({
+    error:
+      "Error interno del servidor al buscar cliente por documento de identidad.",
+  });
+});
+
 router.get("/detallesVenta/:numero_documento", async (req, res) => {
   const { numero_documento } = req.params;
   let retries = 0;
@@ -350,7 +385,7 @@ router.get("/last-document-number", async (req, res) => {
       );
 
       res.status(200).json({ document_number: formattedDocumentNumber });
-      return; // Salir del bucle y devolver la respuesta exitosa
+      return;
     } catch (error) {
       console.error(
         `Error al obtener el último número de documento (Intento ${
@@ -359,11 +394,10 @@ router.get("/last-document-number", async (req, res) => {
         error
       );
       retries++;
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar 2 segundos antes de reintentar
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
 
-  // Si se alcanza el número máximo de intentos sin éxito
   console.error("Se excedió el número máximo de intentos sin éxito");
   res.status(500).json({ error: "Error interno del servidor" });
 });
